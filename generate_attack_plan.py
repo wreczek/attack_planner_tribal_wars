@@ -45,14 +45,14 @@ def pl_to_eng(unit: str) -> str:
     return switcher.get(unit, "error")
 
 
-def yield_all_units():
-    units = ["pikinier", "miecznik", "topornik",
-             "lucznik", "zwiadowca", "lekki kawalerzysta",
-             "lucznik na koniu", "ciezki kawalerzysta",
-             "taran", "katapulta", "szlachcic"]
-
-    for unit in units:
-        yield unit, units_speed(unit)
+# def yield_all_units():
+#     units = ["pikinier", "miecznik", "topornik",
+#              "lucznik", "zwiadowca", "lekki kawalerzysta",
+#              "lucznik na koniu", "ciezki kawalerzysta",
+#              "taran", "katapulta", "szlachcic"]
+#
+#     for unit in units:
+#         yield unit, units_speed(unit)
 
 
 def h_m_s(seconds: float) -> tuple:
@@ -69,9 +69,9 @@ def parse_arrival_time(time: str) -> tuple:
     return h, m, s
 
 
-def display(unit: str, seconds: float) -> None:
-    h, m, s = h_m_s(seconds)
-    print(f"{unit:{19}} {h}:{m:0>2}:{s:0>2}")
+# def display(unit: str, seconds: float) -> None:
+#     h, m, s = h_m_s(seconds)
+#     print(f"{unit:{19}} {h}:{m:0>2}:{s:0>2}")
 
 
 def calculate_distance(first_coords: str, second_coords: str) -> float:
@@ -110,6 +110,13 @@ def split_coords(coords: str) -> tuple:
     return int(coords[:3]), int(coords[4:])
 
 
+def compare_function(attack_time: str):
+    h, m, s = parse_arrival_time(attack_time)
+    h = (h - 12) % 24
+
+    return 3600 * h + 60 * m + s
+
+
 class Attack:
     """Holds all data needed to make an attack plan"""
 
@@ -137,28 +144,34 @@ class Attack:
         for nickname, unit, att_coords, arrival_time \
                 in zip(self._nicknames, self._units, self._att_coords, self._arrival_times):
             if nickname not in used_nicks:
-                used_nicks[nickname] = "\n[player]" + f"{nickname}" + "[/player]:\n"
+                used_nicks[nickname] = []
 
             d = calculate_distance(att_coords, self._deff_coords)
             travel_length = calculate_travel_length(d, unit)
             attack_time = calculate_attack_time(travel_length, arrival_time)
 
-            used_nicks[nickname] += f"Wyjscie [unit]{pl_to_eng(unit)}[/unit] z [village]" \
-                                    f"{att_coords}[/village] o [b][u]{attack_time}[/u][/b] " \
-                                    f"i wchodzi o [i]{arrival_time}[/i]" + "\n"
+            used_nicks[nickname].append([unit, att_coords, attack_time, arrival_time])
 
         for nick_key in used_nicks:
-            sticker += used_nicks[nick_key]
+            used_nicks[nick_key].sort(key=lambda x: compare_function(x[2]))
+
+        for nick_key in used_nicks:
+            sticker += "\n[player]" + f"{nick_key}" + "[/player]:\n"
+
+            for ls in used_nicks[nick_key]:
+                sticker += f"Wyjscie [unit]{pl_to_eng(ls[0])}[/unit] z [village]" \
+                           f"{ls[1]}[/village] o [b][u]{ls[2]}[/u][/b] " \
+                           f"i wchodzi o [i]{ls[3]}[/i]" + "\n"
 
         print(sticker)
         return sticker
 
 
 if __name__ == '__main__':
-    attack = Attack(["lunesco", "koolaar", "lunesco"],
-                    ["taran", "szlachcic", "szlachcic"],
-                    ["429|500", "433|498", "428|500"],
-                    ["07:00:00", "07:00:00", "07:00:00"],
+    attack = Attack(["lunesco", "koolaar", "lunesco", "lunesco", "lunesco"],
+                    ["taran", "szlachcic", "szlachcic", "topornik", "lekki kawalerzysta"],
+                    ["429|500", "433|498", "428|500", "430|498", "429|498"],
+                    ["07:00:00", "07:00:00", "07:00:00", "08:00:00", "07:00:00"],
                     "434|494"
                     )
     attack.get_plan()
