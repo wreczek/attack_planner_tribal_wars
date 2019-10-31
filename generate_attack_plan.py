@@ -45,16 +45,6 @@ def pl_to_eng(unit: str) -> str:
     return switcher.get(unit, "error")
 
 
-# def yield_all_units():
-#     units = ["pikinier", "miecznik", "topornik",
-#              "lucznik", "zwiadowca", "lekki kawalerzysta",
-#              "lucznik na koniu", "ciezki kawalerzysta",
-#              "taran", "katapulta", "szlachcic"]
-#
-#     for unit in units:
-#         yield unit, units_speed(unit)
-
-
 def h_m_s(seconds: float) -> tuple:
     return (int(seconds // 3600),
             int((seconds % 3600) // 60),
@@ -67,11 +57,6 @@ def parse_arrival_time(time: str) -> tuple:
     s = int(time[6:8])
 
     return h, m, s
-
-
-# def display(unit: str, seconds: float) -> None:
-#     h, m, s = h_m_s(seconds)
-#     print(f"{unit:{19}} {h}:{m:0>2}:{s:0>2}")
 
 
 def calculate_distance(first_coords: str, second_coords: str) -> float:
@@ -138,7 +123,7 @@ class Attack:
     def get_plan(self) -> str:
         """Returns attack plan in bb-codes"""
 
-        sticker = f"\nPlan ataku na wioske [village]{self._deff_coords}[/village]:" + "\n"
+        sticker = f"\n[size=12]Plan ataku na wioske [village]{self._deff_coords}[/village]:[/size]" + "\n"
         used_nicks = {}
 
         for nickname, unit, att_coords, arrival_time \
