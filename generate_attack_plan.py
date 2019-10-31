@@ -119,7 +119,7 @@ class Attack:
                  att_coords: list,
                  arrival_times: list,
                  deff_coords: str) -> None:
-        """Holds units, attack villages coordinates, deffender
+        """Holds units, attack villages coordinates, defender
         village coordinates and arrival time"""
 
         self._nicknames = nicknames
@@ -131,28 +131,21 @@ class Attack:
     def get_plan(self) -> str:
         """Returns attack plan in bb-codes"""
 
-        sticker = f"Plan ataku na wioske [village]{self._deff_coords}[/village] "
-        sticker += "(wchodzi o " + "07:00:00" + "):\n"
-
+        sticker = f"\nPlan ataku na wioske [village]{self._deff_coords}[/village]:" + "\n"
         used_nicks = {}
-        travel_times = {}
 
         for nickname, unit, att_coords, arrival_time \
                 in zip(self._nicknames, self._units, self._att_coords, self._arrival_times):
             if nickname not in used_nicks:
                 used_nicks[nickname] = "\n[player]" + f"{nickname}" + "[/player]:\n"
-                travel_times[nickname] = []
 
             d = calculate_distance(att_coords, self._deff_coords)
-            
             travel_length = calculate_travel_length(d, unit)
-            travel_times[nickname].append((travel_length))
-
             attack_time = calculate_attack_time(travel_length, arrival_time)
 
             used_nicks[nickname] += f"Wyjscie [unit]{pl_to_eng(unit)}[/unit] z [village]" \
-                                    f"{att_coords}[/village] o {attack_time} " \
-                                    f"i wchodzi o {arrival_time}" + "\n"
+                                    f"{att_coords}[/village] o [b][u]{attack_time}[/u][/b] " \
+                                    f"i wchodzi o [i]{arrival_time}[/i]" + "\n"
 
         for nick_key in used_nicks:
             sticker += used_nicks[nick_key]
