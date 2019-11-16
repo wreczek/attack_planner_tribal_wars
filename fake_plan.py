@@ -173,7 +173,7 @@ class Attack:
         sticker += "Pozdrawiamy\n[b][i][u]Rada Plemienia Jagody[/u][/i][/b]"
 
         # print(sticker)
-        with open(f"C:\\Users\\lunesco\\Desktop\\nicki_jagodek\\{self._nickname}.txt", "w") as file:
+        with open(f"C:\\Users\\lunesco\\Desktop\\fejk_akcja\\{self._nickname}.txt", "w") as file:
             file.write(sticker)
         return sticker
 

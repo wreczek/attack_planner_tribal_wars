@@ -3,7 +3,6 @@ import math
 
 def units_speed(unit) -> float:
     """Holds all units speed in a dictionary
-
     **Returns:**
         time (in seconds) needed to travel one grid
     """
