@@ -1,3 +1,4 @@
+import argparse
 import random
 
 board = [
@@ -20,17 +21,18 @@ T = 200  # Th
 # liczba kategorii
 N = 5
 
-# liczba wszystkich atrakcji w danych kategoriach
+# liczba wszystkich atrakcji W danych kategoriach
 # c = [3,4,3,5,3]
 # funkcja wagi dla danych kategorii
-w = [1, 2, 3, 4, 5]
-# min liczba odwiedzaonych atrakcji w danych kategoriach
-g = [1, 1, 1, 1, 3]
+W = [1, 2, 3, 4, 5]
+# min liczba odwiedzaonych atrakcji W danych kategoriach
+G = 5 * [0]  # [1, 1, 1, 1, 3]
 
-MAX_NEIGHBOURHOOD_SEARCH_SIZE = 3
-ITERATION_NUMBER = 10
-BEE_RANDOM_SEARCHER_NUMBER = 5
-SEARCH_NEIGHBOURHOOD_ITERATION_NUMBER = 100
+# BAZOWE USTAWIENIA: 3, 5, 50, 5
+global MAX_NEIGHBOURHOOD_SEARCH_SIZE
+global ITERATION_NUMBER
+global BEE_RANDOM_SEARCHER_NUMBER
+global SEARCH_NEIGHBOURHOOD_ITERATION_NUMBER
 
 best_solution_of_all = []
 
@@ -151,7 +153,7 @@ def optimize(start_solution):
             random_solutions.append(solution)
 
         for k in range(SEARCH_NEIGHBOURHOOD_ITERATION_NUMBER):
-            # jeśli nic nie zostało zoptymalizowane w poprzednich iteracjach to break
+            # jeśli nic nie zostało zoptymalizowane W poprzednich iteracjach to break
             if not optimized_solutions:
                 break
 
@@ -187,7 +189,7 @@ def optimize(start_solution):
 
 
 def get_score(solution):
-    return sum([w[board[pos[0]][pos[1]] - 1] for pos in solution])
+    return sum([W[board[pos[0]][pos[1]] - 1] for pos in solution])
 
 
 def get_n_best_solutions(solutions_list, n):
@@ -211,7 +213,7 @@ def get_n_best_solutions(solutions_list, n):
 
 
 def validate_solution(path):
-    min_per_category = g
+    min_per_category = G
     for pos in path:
         x = pos[0]
         y = pos[1]
@@ -245,7 +247,7 @@ def get_nearest(x, y, path, searched_categories):
 
 
 def find_first_solution(x, y):
-    # searched_categories = [index+1 for index, i in enumerate(g) if i != 0]
+    # searched_categories = [index+1 for index, i in enumerate(G) if i != 0]
     path = []
     time = 0
     while True:
@@ -274,7 +276,25 @@ def main():
         best_solution_of_all = first_path
     optimize(first_path)
     print(best_solution_of_all)
+    print(f"\nBEST RESULT SCORE: {get_score(best_solution_of_all)}")
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Enter bees algorithm parameters:")
+
+    parser.add_argument("-n", default=3, metavar="neigh_size", type=int,
+                        help="what is the radius of neighbourhood search")
+    parser.add_argument("-i", default=5, metavar="iter_num", type=int,
+                        help="how many iterations")
+    parser.add_argument("-b", default=50, metavar="bee_num", type=int,
+                        help="how many bees to randomly search")
+    parser.add_argument("-s", default=5, metavar="search_iter_num", type=int,
+                        help="how many neighbourhood iterations")
+
+    args = parser.parse_args()
+
+    MAX_NEIGHBOURHOOD_SEARCH_SIZE = getattr(args, 'n')
+    ITERATION_NUMBER = getattr(args, 'i')
+    BEE_RANDOM_SEARCHER_NUMBER = getattr(args, 'b')
+    SEARCH_NEIGHBOURHOOD_ITERATION_NUMBER = getattr(args, 's')
     main()
