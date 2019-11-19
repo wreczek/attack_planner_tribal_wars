@@ -134,7 +134,7 @@ class Attack:
 
         sticker = "Witamy Cię bardzo serdecznie, \n\n"
         sticker += "przed nami akcja fejkowania, o której juz wspominaliśmy. Bardzo prosimy \n"
-        sticker += "abyś wysłał następujące fejki(rozpiska w spoilerze):\n"
+        sticker += "abyś wysłał następujące fejki(rozpiska W spoilerze):\n"
 
         sticker += f"[spoiler=rozpiska]Plan fejkowania dla gracza [player]{self._nickname}[/player]:" + "\n\n"
         attacks = []
@@ -165,15 +165,15 @@ class Attack:
 
         sticker += "[/spoiler]\n"
         sticker += "Jeżeli nie dasz rady dokładnie o tej godzinie wysłać, to jeżeli się spóźnisz\n"
-        sticker += "o kilka minut, to nic się nie stanie. Ważne, aby ataki wchodziły w godzinach\n"
-        sticker += "7-14 w czwartek, dlatego możesz przesunąć wysyłkę ataków o jakąś stałą czasową :)\n\n"
+        sticker += "o kilka minut, to nic się nie stanie. Ważne, aby ataki wchodziły W godzinach\n"
+        sticker += "7-14 W czwartek, dlatego możesz przesunąć wysyłkę ataków o jakąś stałą czasową :)\n\n"
 
         sticker += "Pamiętaj, że jest to Twój obowiązek i zostaniesz z tego rozliczony, gdyż od tej\n"
         sticker += "akcji zależy przyszłość naszego plemienia!\n\n"
         sticker += "Pozdrawiamy\n[b][i][u]Rada Plemienia Jagody[/u][/i][/b]"
 
         # print(sticker)
-        with open(f"C:\\Users\\lunesco\\Desktop\\fejk_akcja\\{self._nickname}.txt", "w") as file:
+        with open(f"C:\\Users\\lunesco\\Desktop\\fejk_akcja\\{self._nickname}.txt", "W") as file:
             file.write(sticker)
         return sticker
 

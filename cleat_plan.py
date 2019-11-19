@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 import re
 
@@ -106,7 +108,7 @@ def split_coords(coords: str) -> tuple:
 
 def compare_function(attack_time: str):
     h, m, s = parse_arrival_time(attack_time)
-    h = (h - 18) % 24
+    h = (h - 1) % 24
 
     return 3600 * h + 60 * m + s
 
@@ -115,107 +117,67 @@ class Attack:
     """Holds all data needed to make an attack plan"""
 
     def __init__(self,
-                 nicknames: list,
-                 units: list,
-                 att_coords: list,
-                 arrival_times: list,
-                 deff_coords: str) -> None:
+                 user: User,
+                 purpose: str,
+                 arrival_time: str,
+                 deff_coord: str) -> None:
         """Holds unit, attack villages coordinates, defender
         village coordinates and arrival time"""
 
-        self._nicknames = nicknames
-        self._units = units
-        self._att_coords = att_coords
-        self._deff_coords = deff_coords
-        self._arrival_times = arrival_times
+        self._user = user
+        self._purpose = purpose
+        self._deff_coord = deff_coord
+        self._arrival_time = arrival_time
 
-    # attack = Attack(n_att_villages * N_DEFF_UNITS * [nickname],
-    #                 n_att_villages * ["pikinier", "miecznik", "lekki kawalerzysta", "ciezki kawalerzysta", "taran"],
-    #                 N_DEFF_UNITS * user.get_user_villages(),
-    #                 N_DEFF_UNITS * n_att_villages * ["22:00:00"],
-    #                 "426|506"
-    #                 )
+        self._att_coords = user.get_villages()
 
     def get_plan(self) -> str:
         """Returns attack plan in bb-codes"""
 
-        sticker = f"\n[size=12]Plan ataku na wioske [village]{self._deff_coords}[/village]:[/size]" + "\n"
-        used_nicks = {}
+        if "klin" in self._purpose:
+            sticker = f"\n[size=12]Plan klinowania wioski [village]{self._deff_coord}[/village]:[/size]" + "\n"
+        elif "atak" in self._purpose:
+            sticker = f"\n[size=12]Plan ataku na wioske [village]{self._deff_coord}[/village]:[/size]" + "\n"
+        else:
+            raise Exception("Bad attack purpose!")
 
-        for nickname, unit, att_coords, arrival_time \
-                in zip(self._nicknames, self._units, self._att_coords, self._arrival_times):
-            if nickname not in used_nicks:
-                used_nicks[nickname] = []
+        attacks = []
 
-            d = calculate_distance(att_coords, self._deff_coords)
-            travel_length = calculate_travel_length(d, unit)
-            attack_time = calculate_attack_time(travel_length, arrival_time)
+        for i, unit in enumerate(DEFF_UNITS):
+            for j, att_coord in enumerate(self._att_coords):
+                d = calculate_distance(att_coord, self._deff_coord)
+                travel_length = calculate_travel_length(d=d, unit=unit)
+                attack_time = calculate_attack_time(travel_length, self._arrival_time)
 
-            used_nicks[nickname].append([unit, att_coords, attack_time, arrival_time])
+                attacks.append([unit, att_coord, attack_time, self._arrival_time])
 
-        for nick_key in used_nicks:
-            used_nicks[nick_key].sort(key=lambda x: compare_function(x[2]))
+        attacks.sort(key=lambda x: compare_function(x[2]))
 
-        for nick_key in used_nicks:
-            sticker += "\n[player]" + f"{nick_key}" + "[/player]:\n"
+        sticker += "\n[player]" + f"{self._user.get_nickname()}" + "[/player]:\n"
 
-            for ls in used_nicks[nick_key]:
-                sticker += f"Wyjscie [unit]{pl_to_eng(ls[0])}[/unit] z [village]" \
-                           f"{ls[1]}[/village] o [b][u]{ls[2]}[/u][/b] " \
-                           f"i wchodzi o [i]{ls[3]}[/i]" + "\n"
+        for attack in attacks:
+            sticker += f"Wyjscie [unit]{pl_to_eng(attack[0])}[/unit] z [village]" \
+                       f"{attack[1]}[/village] o [b][u]{attack[2]}[/u][/b] " \
+                       f"i wchodzi o [i]{attack[3]}[/i]" + "\n"
 
         print(sticker)
         return sticker
 
 
-def get_user_id(nickname: str) -> str:
-    nickname_pattern = '<a class="" href="/guest.php\\?screen=info_player&amp;id=(\\d{1,15})">\\n\\s*' + \
-                       '<img src="https://dspl.innogamescdn.com/asset/\\w{1,15}/graphic/userimage/\\w{1,15}' + \
-                       'thumb" alt="" class="userimage-tiny" />\\s*' + \
-                       f'{nickname}\\s*' + \
-                       '</a>'
-
-    ranking_url = f"https://pl145.plemiona.pl/guest.php?name={nickname}"
-    ranking_response = requests.get(ranking_url)
-    ranking_content = ranking_response.text
-
-    if re.search(pattern=nickname_pattern, string=ranking_content):
-        regexed_user_id = re.findall(pattern=nickname_pattern, string=ranking_content)[0]
-    else:
-        raise Exception("Nickname not found!")
-
-    return regexed_user_id
-
-
-def get_villages_from_profile(profile_url: str) -> list:
-    profile_response = requests.get(profile_url)
-    profile_content = profile_response.text
-
-    villages_pattern = "<td>(\\d{3}\\|\\d{3})</td>"  # \\d catches digits, {3} - 3, \\| - char '|'
-
-    if re.search(pattern=villages_pattern, string=profile_content):
-        regexed_user_villages = re.findall(pattern=villages_pattern, string=profile_content)
-    else:
-        raise Exception("Villages not found!")
-
-    return regexed_user_villages
-
-
-class User:  # TODO
+class User:
     """Class that holds user data, as user id
        and user villages coordinates"""
 
-    def __init__(self, nickname: str, purpose: str) -> None:
+    def __init__(self, nickname: str) -> None:
         """Initializes user data"""
 
         self.nickname = nickname
-        self.purpose = purpose
         self.user_id = self._extract_user_id()
         self.user_villages = self._extract_user_villages()
 
     def _extract_user_id(self) -> str:
         nickname_pattern = '<a class="" href="/guest.php\\?screen=info_player&amp;id=(\\d{1,15})">\\n\\s*' + \
-                           '<img src="https://dspl.innogamescdn.com/asset/\\w{1,15}/graphic/userimage/\\w{1,15}' + \
+                           '<img src="https://dspl.innogamescdn.com/asset/\\W{1,15}/graphic/userimage/\\W{1,15}' + \
                            'thumb" alt="" class="userimage-tiny" />\\s*' + \
                            f'{self.nickname}\\s*' + \
                            '</a>'
@@ -245,21 +207,17 @@ class User:  # TODO
 
         return regexed_user_villages
 
-    def get_user_villages(self):
+    def get_villages(self):
         return self.user_villages
+
+    def get_nickname(self):
+        return self.nickname
 
 
 if __name__ == '__main__':
-    nickname = "Lunesco"
-    purpose = "klinowania wioski"  # ataku na wioske
-
-    user = User(nickname=nickname, purpose=purpose)
-
-    n_att_villages = len(user.get_user_villages())
-    attack = Attack(n_att_villages * N_DEFF_UNITS * [nickname],
-                    n_att_villages * ["pikinier", "miecznik", "lekki kawalerzysta", "ciezki kawalerzysta", "taran"],
-                    N_DEFF_UNITS * user.get_user_villages(),
-                    N_DEFF_UNITS * n_att_villages * ["22:00:00"],
-                    "426|506"
+    attack = Attack(user=User(nickname="Lunesco"),
+                    purpose="klin",
+                    arrival_time="22:00:00",
+                    deff_coord="426|506"
                     )
     attack.get_plan()
