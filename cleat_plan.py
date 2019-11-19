@@ -176,21 +176,21 @@ class User:
         self.user_villages = self._extract_user_villages()
 
     def _extract_user_id(self) -> str:
-        nickname_pattern = '<a class="" href="/guest.php\\?screen=info_player&amp;id=(\\d{1,15})">\\n\\s*' + \
-                           '<img src="https://dspl.innogamescdn.com/asset/\\W{1,15}/graphic/userimage/\\W{1,15}' + \
-                           'thumb" alt="" class="userimage-tiny" />\\s*' + \
+        nickname_pattern = '<a class="" href="/guest.php\\?screen=info_player\\&amp;id=(\\d{1,15})">\\s*' + \
+                           '<img src="https://dspl.innogamescdn.com/asset/\\w{1,15}/graphic/userimage/\\w{1,15}" ' + \
+                           'alt="" class="userimage-tiny" />\\s*' + \
                            f'{self.nickname}\\s*' + \
                            '</a>'
 
         ranking_url = f"https://pl145.plemiona.pl/guest.php?name={self.nickname}"
         ranking_response = requests.get(ranking_url)
         ranking_content = ranking_response.text
-
+        print(ranking_content)
         if re.search(pattern=nickname_pattern, string=ranking_content):
             regexed_user_id = re.findall(pattern=nickname_pattern, string=ranking_content)[0]
         else:
             raise Exception("Nickname not found!")
-
+        print(f"regexed = {regexed_user_id}")
         return regexed_user_id
 
     def _extract_user_villages(self):
@@ -215,7 +215,7 @@ class User:
 
 
 if __name__ == '__main__':
-    attack = Attack(user=User(nickname="Lunesco"),
+    attack = Attack(user=User(nickname="pochu"),
                     purpose="klin",
                     arrival_time="22:00:00",
                     deff_coord="426|506"
