@@ -23,9 +23,7 @@ def get_player_times(server):
                     s.get(f'https://pl{server}.plemiona.pl/map/conquer.txt').content.decode('utf-8').split('\n') if
                     line]
 
-        print(f"convquers = {conquers}")
-
-        soup = BeautifulSoup(s.get(f'https://{server}.plemiona.pl/page/settings').content.decode('utf-8'),
+        soup = BeautifulSoup(s.get(f'https://pl{server}.plemiona.pl/page/settings').content.decode('utf-8'),
                              'html.parser')
         server_start_timestamp = datetime.timestamp(datetime.strptime(soup.find_all(
             'table', {'class': 'data-table'})[-1].find_all('td')[-1].text, '%d.%m.%y %H:%M'))
@@ -71,11 +69,13 @@ class Ranking:
     """Holds and preprocesses information about top10 defeated opponents
        ranking from given tribals."""
 
-    def __init__(self, server: int, player_times, how_many: int, ally_tribes_list: list):
+    def __init__(self, server: int, player_times: dict, how_many: int, ally_tribes_list: list,
+                 extra_players_list: list):
         self.server = server
+        self.player_times = player_times
         self.how_many = how_many
         self.ally_tribes_list = ally_tribes_list
-        self.player_times = player_times
+        self.extra_players_list = extra_players_list
 
     def get_given_defeated_opponents_top_list(self, type: str):
         offset = 0
@@ -86,26 +86,50 @@ class Ranking:
             ranking_response = requests.get(ranking_url)
             ranking_content = ranking_response.text
 
-            nickname_pattern = '<td class="lit-item">(\\d{1,3})</td>\\s*' + \
-                               '<td class="lit-item nowrap">\\s*' + \
-                               '<a class="" href="/guest.php\\?screen=info_player\\&amp;id=(\\d{1,15})">\\s*' + \
-                               '<img src="https://dspl.innogamescdn.com/asset/\\w{1,15}/graphic/.{10,30}' + \
-                               '" alt="" class="userimage-tiny" />\\s*' + \
-                               '([\\w. ]*)\\s*' + \
-                               '</a>\\s*' + \
-                               '</td>\\s*' + \
-                               '<td class="lit-item nowrap">\\s*' + \
-                               '<img src="https://dspl.innogamescdn.com/asset/77d01c98/graphic/.{10,30}' + \
-                               '" alt="" class="userimage-tiny" />\\s*' + \
-                               '<a href="/guest.php\\?screen=info_ally\\&amp;id=[\\d]*">' + \
-                               f'(?:{"|".join(self.ally_tribes_list)})' + \
-                               '</a>\\s*' + \
-                               '</td>\\s*' + \
-                               '<td class="lit-item">([0-9., [a-z]*)</td>'
+            nickname_pattern_by_tribe = '<td class="lit-item">(\\d{1,3})</td>\\s*' + \
+                                        '<td class="lit-item nowrap">\\s*' + \
+                                        '<a class="" href="/guest.php\\?screen=info_player\\&amp;id=(\\d{1,15})">' + \
+                                        '\\s*<img src="https://dspl.innogamescdn.com/asset/\\w{1,15}/graphic/' + \
+                                        '.{10,30}" alt="" class="userimage-tiny" />\\s*' + \
+                                        '([\\w. ]*)\\s*' + \
+                                        '</a>\\s*' + \
+                                        '</td>\\s*' + \
+                                        '<td class="lit-item nowrap">\\s*' + \
+                                        '<img src="https://dspl.innogamescdn.com/asset/\\w{1,15}/graphic/.{10,30}' + \
+                                        '" alt="" class="userimage-tiny" />\\s*' + \
+                                        '<a href="/guest.php\\?screen=info_ally\\&amp;id=[\\d]*">' + \
+                                        f'(?:{"|".join(self.ally_tribes_list)})' + \
+                                        '</a>\\s*' + \
+                                        '</td>\\s*' + \
+                                        '<td class="lit-item">([0-9., [a-z]*)</td>'
 
-            found = re.findall(pattern=nickname_pattern, string=ranking_content)
+            nickname_pattern_by_nick = '<td class="lit-item">(\\d{1,3})</td>\\s*' + \
+                                       '<td class="lit-item nowrap">\\s*' + \
+                                       '<a class="" href="/guest.php\\?screen=info_player\\&amp;id=(\\d{1,15})">' + \
+                                       '\\s*<img src="https://dspl.innogamescdn.com/asset/\\w{1,15}/graphic/' + \
+                                       '.{10,30}" alt="" class="userimage-tiny" />\\s*' + \
+                                       f'((?:{"|".join(self.extra_players_list)}))' + \
+                                       '\\s*</a>\\s*' + \
+                                       '</td>\\s*' + \
+                                       '<td class="lit-item nowrap">\\s*' + \
+                                       '<img src="https://dspl.innogamescdn.com/asset/\\w{1,15}/graphic/.{10,30}' + \
+                                       '" alt="" class="userimage-tiny" />\\s*' + \
+                                       '<a href="/guest.php\\?screen=info_ally\\&amp;id=[\\d]*">' + \
+                                       '.*' + \
+                                       '</a>\\s*' + \
+                                       '</td>\\s*' + \
+                                       '<td class="lit-item">([0-9., [a-z]*)</td>'
+
+            found_by_tribe = re.findall(pattern=nickname_pattern_by_tribe, string=ranking_content)
+            found_by_nick = re.findall(pattern=nickname_pattern_by_nick, string=ranking_content)
+
+            found = found_by_tribe + found_by_nick
+            found.sort(key=lambda x: int(x[0]))
+
             top_ally_list += found[:how_many - len(top_ally_list)]
             offset += 25
+            print(f"found_by_tribe = {found_by_tribe}")
+            print(f"found_by_nick = {found_by_nick}")
 
         their_normalized_points = self.get_normalized_points(top_ally_list)
 
@@ -118,30 +142,29 @@ class Ranking:
         table = "[table]" + \
                 "[**]Lp plemienia[||]Lp świata[||]Nickname[||]Pokonane jednostki[||]Na wioskę[||]Wiosko-dni[/**]"
 
-        table += f"[*][size=14]1[/size][|][size=14]{top_list[0][0]}[/size][|]" \
-                 f"[size=14][player]{top_list[0][2]}[/player][/size][|]" \
-                 f"[size=14]{top_list[0][3]}[/size][|][size=14]{normalized_points[0]}[/size][|]" \
-                 f"[size=14]{self.player_times[top_list[0][1]]}[/size]"
-        table += f"[*][size=12]2[/size][|][size=12]{top_list[1][0]}[/size][|]" \
-                 f"[size=12][player]{top_list[1][2]}[/player][/size][|]" \
-                 f"[size=12]{top_list[1][3]}[/size][|][size=12]{normalized_points[1]}[/size][|]" \
-                 f"[size=12]{self.player_times[top_list[1][1]]}[/size]"
-        table += f"[*][size=11]3[/size][|][size=11]{top_list[2][0]}[/size][|]" \
-                 f"[size=11][player]{top_list[2][2]}[/player][/size][|]" \
-                 f"[size=11]{top_list[2][3]}[/size][|][size=11]{normalized_points[2]}[/size][|]" \
-                 f"[size=11]{self.player_times[top_list[2][1]]}[/size]"
+        def row(tribe_ranking: int, warrior: list, size: int, normed_points: str, vill_days: int) -> str:
+            return f"[*][size={size}]{tribe_ranking}[/size][|][size={size}]{warrior[0]}[/size][|]" \
+                   f"[size={size}][player]{warrior[2]}[/player][/size][|]" \
+                   f"[size={size}]{warrior[3]}[/size][|][size=14]{normed_points}[/size][|]" \
+                   f"[size={size}]{vill_days}[/size]"
+
+        table += row(tribe_ranking=1, warrior=top_list[0], size=14, normed_points=normalized_points[0],
+                     vill_days=int(float(self.player_times[top_list[0][1]])))
+        table += row(tribe_ranking=2, warrior=top_list[1], size=12, normed_points=normalized_points[1],
+                     vill_days=int(float(self.player_times[top_list[1][1]])))
+        table += row(tribe_ranking=3, warrior=top_list[2], size=11, normed_points=normalized_points[2],
+                     vill_days=int(float(self.player_times[top_list[2][1]])))
 
         for i, warrior in enumerate(top_list[3:]):
-            table += f"[*]{i + 4}[|]{warrior[0]}[|][player]{warrior[2]}" \
-                     f"[/player][|]{warrior[3]}[|]{normalized_points[i + 3]}[|]" \
-                     f"{self.player_times[top_list[i + 3][1]]}"
+            table += row(tribe_ranking=i + 4, warrior=warrior, size=9, normed_points=normalized_points[i + 3],
+                         vill_days=int(float(self.player_times[top_list[i + 3][1]])))
 
         table += "[/table]"
 
         return table
 
     def get_all_info_in_one_place(self):
-        sticker = f"[size=13]Data: {datetime.now().strftime('%d.%m.%Y %H:%M:%S')}[/size]\n\n"
+        sticker = f"[spoiler=Data: {datetime.now().strftime('%d.%m.%Y %H:%M:%S')}]\n\n"
         sticker += "[size=13][b]Ranking agresorów:[/b][/size]"
         sticker += self.get_table(type="att")
 
@@ -153,6 +176,7 @@ class Ranking:
 
         sticker += "\n[size=15][b]Ranking razem:[/b][/size]"
         sticker += self.get_table(type="all")
+        sticker += "[/spoiler]"
         print(sticker)
 
     def get_normalized_points(self, top10_ally_list):
@@ -174,7 +198,6 @@ class Ranking:
             points = self.parse_points(warrior[3])
 
             normalized_points.append(self.decorate_points(points // int(num_of_villages[0])))
-            # print(f"points = {points}, num+of+vill = {num_of_villages}, norm = {normalized_points}")
 
         return normalized_points
 
@@ -184,7 +207,7 @@ class Ranking:
             points = points[:-4]
             total, fractional = points.split(',')
             result = int(total) * 10 ** 6 + int(float(f"0.{fractional}") * (10 ** 6))
-        print(f"result = {result}")
+
         return int(result)
 
     def decorate_points(self, points: int):
@@ -200,21 +223,26 @@ class Ranking:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Enter arguments (prefix char is '):", prefix_chars="'")
     parser.add_argument("'s", default="145", metavar='server_number', type=str,
-                        help="Type the servers number")
+                        help="Type the servers number, e.g. 145.")
     parser.add_argument("'n", default=10, metavar="number_of_players", type=int,
-                        help="Number of players in the ranking, at least 3!")
+                        help="Number of the best players included in the ranking., at least 3!")
     parser.add_argument("'a", nargs='+', metavar="ally_tribes_list", type=str,
-                        help="List of ally tribes, whom top players will be listed")
+                        help="A list of allied tribes whose best players will be included.")
+    parser.add_argument("'p", nargs='+', metavar="extra_players_list", type=str,
+                        help="A list of extra players, that will be included.")
 
     args = parser.parse_args()
     server = getattr(args, 's')
     how_many = getattr(args, 'n')
     ally_tribes_list = getattr(args, 'a')
+    extra_players_list = getattr(args, 'p')
 
     if how_many < 3:
         raise Exception("Number of players must be at least 3!")
 
     player_times = get_player_times(server=server)
+    extra_players_list = ["ZCB Burzą Błogosławiony", "ZCB Burzą Błogosławiony"]
 
-    ranking = Ranking(server=server, player_times=player_times, how_many=how_many, ally_tribes_list=ally_tribes_list)
+    ranking = Ranking(server=server, player_times=player_times, how_many=how_many, ally_tribes_list=ally_tribes_list,
+                      extra_players_list=extra_players_list)
     ranking.get_all_info_in_one_place()
