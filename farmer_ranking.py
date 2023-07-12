@@ -1,43 +1,10 @@
-# """Module responsible for extracting players from farmer ranking belonging to specific tribe."""
-# import re
-# import scrapy
-# from scrapy.crawler import CrawlerProcess
-# from scrapy.item import Item, Field
-# from scrapy.utils.project import get_project_settings
-#
-#
-# class RankingItem(Item):
-#     ranking = Field()
-#     name = Field()
-#     tribe = Field()
-#     score = Field()
-#
-#
-# class RankingSpider(scrapy.Spider):
-#     name = 'ranking'
-#     start_urls = ['https://pl192.plemiona.pl/guest.php?screen=ranking&mode=in_a_day&offset=0&type=loot_res']
-#
-#     def parse(self, response):
-#         for row in response.xpath('//table[@id="in_a_day_ranking_table"]//tr[position() > 1]'):
-#             item = RankingItem()
-#             item['ranking'] = row.xpath('td[1]/text()').get()
-#             item['name'] = re.findall(r'([a-zA-Z0-9.?*-]+)\r\n', row.xpath('td[2]//a').get())[0]
-#             item['tribe'] = row.xpath('td[3]//a/text()').get()
-#             item['score'] = ''.join(re.findall(r'\d', row.xpath('td[4]').get()))
-#             yield item
-#
-#
-# process = CrawlerProcess(get_project_settings())
-# process.crawl(RankingSpider)
-# process.start()
-
 """Module responsible for extracting players from farmer ranking belonging to specific tribe."""
 import re
 import scrapy
 from scrapy.crawler import CrawlerProcess
 from scrapy.item import Item, Field
 from scrapy.utils.project import get_project_settings
-
+import pyperclip
 
 
 def format_number(number):
@@ -48,7 +15,8 @@ def format_number(number):
         number /= 1000.0
         index += 1
 
-    formatted_number = "{:.2f}{}".format(number, suffixes[index])
+    formatted_number = f"{number:.2f}{suffixes[index]}"
+
     return formatted_number
 
 
@@ -78,6 +46,7 @@ class RankingSpider(scrapy.Spider):
 
             score = int(''.join(re.findall(r'\d', row.xpath('td[4]').get())))
             formatted_score = format_number(score)
+
             item['score'] = formatted_score
 
             if item['tribe'] in ally_tribes or item['name'] in players_list:
@@ -97,18 +66,11 @@ process = CrawlerProcess(get_project_settings())
 process.crawl(RankingSpider)
 process.start()
 
-print(RankingSpider.ranking_list)
-
 whole_dict = RankingSpider.ranking_list
 
 bb_text = """[table]
 [**]Ranking plemienny[||]Ranking ogólny[||]Nazwa[||]Plemię[||]Wynik[/**]
 """
-
-# f"""[*][size={size}]{tribe_ranking}[/size][|][size={size}]{warrior[0]}[/size][|]"
-#                    f"[size={size}][player]{warrior[2]}[/player][/size][|]"
-#                    f"[size={size}]{warrior[3]}[/size][|][size=14]{normed_points}[/size][|]"
-#                    f"[size={size}]{vill_days}[/size]"""
 
 size1 = 16
 size2 = 15
@@ -124,3 +86,5 @@ for ind, d in enumerate(whole_dict[3:]):
 bb_text += """[/table]"""
 
 print(f'{bb_text}')
+
+pyperclip.copy(f'{bb_text}')
