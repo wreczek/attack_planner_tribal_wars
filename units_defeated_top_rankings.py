@@ -86,39 +86,69 @@ class Ranking:
             ranking_response = requests.get(ranking_url)
             ranking_content = ranking_response.text
 
-            nickname_pattern_by_tribe = '<td class="lit-item">(\\d{1,3})</td>\\s*' + \
-                                        '<td class="lit-item nowrap">\\s*' + \
-                                        '<a class="" href="/guest.php\\?screen=info_player\\&amp;id=(\\d{1,15})">' + \
-                                        '\\s*<img src="https://dspl.innogamescdn.com/asset/\\w{1,15}/graphic/' + \
-                                        '.{10,30}" alt="" class="userimage-tiny" />\\s*' + \
-                                        '([\\w. ]*)\\s*' + \
-                                        '</a>\\s*' + \
-                                        '</td>\\s*' + \
-                                        '<td class="lit-item nowrap">\\s*' + \
-                                        '<img src="https://dspl.innogamescdn.com/asset/\\w{1,15}/graphic/.{10,30}' + \
-                                        '" alt="" class="userimage-tiny" />\\s*' + \
-                                        '<a href="/guest.php\\?screen=info_ally\\&amp;id=[\\d]*">' + \
-                                        f'(?:{"|".join(self.ally_tribes_list)})' + \
-                                        '</a>\\s*' + \
-                                        '</td>\\s*' + \
-                                        '<td class="lit-item">([0-9., [a-z]*)</td>'
+            # nickname_pattern_by_tribe = '<td class="lit-item">(\\d{1,3})</td>\\s*' + \
+            #                             '<td class="lit-item nowrap">\\s*' + \
+            #                             '<a class="" href="/guest.php\\?screen=info_player\\&amp;id=(\\d{1,15})">' + \
+            #                             '\\s*<img src="https://dspl.innogamescdn.com/asset/\\w{1,15}/graphic/' + \
+            #                             '.{10,30}" alt="" class="userimage-tiny" />\\s*' + \
+            #                             '([\\w. ]*)\\s*' + \
+            #                             '</a>\\s*' + \
+            #                             '</td>\\s*' + \
+            #                             '<td class="lit-item nowrap">\\s*' + \
+            #                             '<img src="https://dspl.innogamescdn.com/asset/\\w{1,15}/graphic/.{10,30}' + \
+            #                             '" alt="" class="userimage-tiny" />\\s*' + \
+            #                             '<a href="/guest.php\\?screen=info_ally\\&amp;id=[\\d]*">' + \
+            #                             f'(?:{"|".join(self.ally_tribes_list)})' + \
+            #                             '</a>\\s*' + \
+            #                             '</td>\\s*' + \
+            #                             '<td class="lit-item">([0-9., [a-z]*)</td>'
+            #
+            # nickname_pattern_by_nick = '<td class="lit-item">(\\d{1,3})</td>\\s*' + \
+            #                            '<td class="lit-item nowrap">\\s*' + \
+            #                            '<a class="" href="/guest.php\\?screen=info_player\\&amp;id=(\\d{1,15})">' + \
+            #                            '\\s*<img src="https://dspl.innogamescdn.com/asset/\\w{1,15}/graphic/' + \
+            #                            '.{10,30}" alt="" class="userimage-tiny" />\\s*' + \
+            #                            f'((?:{"|".join(self.extra_players_list)}))' + \
+            #                            '\\s*</a>\\s*' + \
+            #                            '</td>\\s*' + \
+            #                            '<td class="lit-item nowrap">\\s*' + \
+            #                            '<img src="https://dspl.innogamescdn.com/asset/\\w{1,15}/graphic/.{10,30}' + \
+            #                            '" alt="" class="userimage-tiny" />\\s*' + \
+            #                            '<a href="/guest.php\\?screen=info_ally\\&amp;id=[\\d]*">' + \
+            #                            '.*' + \
+            #                            '</a>\\s*' + \
+            #                            '</td>\\s*' + \
+            #                            '<td class="lit-item">([0-9., [a-z]*)</td>'
 
-            nickname_pattern_by_nick = '<td class="lit-item">(\\d{1,3})</td>\\s*' + \
-                                       '<td class="lit-item nowrap">\\s*' + \
-                                       '<a class="" href="/guest.php\\?screen=info_player\\&amp;id=(\\d{1,15})">' + \
-                                       '\\s*<img src="https://dspl.innogamescdn.com/asset/\\w{1,15}/graphic/' + \
-                                       '.{10,30}" alt="" class="userimage-tiny" />\\s*' + \
-                                       f'((?:{"|".join(self.extra_players_list)}))' + \
-                                       '\\s*</a>\\s*' + \
-                                       '</td>\\s*' + \
-                                       '<td class="lit-item nowrap">\\s*' + \
-                                       '<img src="https://dspl.innogamescdn.com/asset/\\w{1,15}/graphic/.{10,30}' + \
-                                       '" alt="" class="userimage-tiny" />\\s*' + \
-                                       '<a href="/guest.php\\?screen=info_ally\\&amp;id=[\\d]*">' + \
-                                       '.*' + \
-                                       '</a>\\s*' + \
-                                       '</td>\\s*' + \
-                                       '<td class="lit-item">([0-9., [a-z]*)</td>'
+            nickname_pattern_by_tribe = r'<td class="lit-item">(\d{1,3})</td>\s*' \
+                                        r'<td class="lit-item nowrap">\s*' \
+                                        r'<a class="" href="/guest.php\?screen=info_player&amp;id=(\d{1,15})">\s*' \
+                                        r'<img src="https://dspl.innogamescdn.com/asset/\w{1,15}/graphic/.{10,30}" alt="" class="userimage-tiny" />\s*' \
+                                        r'([\w. ]*)\s*' \
+                                        r'</a>\s*' \
+                                        r'</td>\s*' \
+                                        r'<td class="lit-item nowrap">\s*' \
+                                        r'<img src="https://dspl.innogamescdn.com/asset/\w{1,15}/graphic/.{10,30}" alt="" class="userimage-tiny" />\s*' \
+                                        r'<a href="/guest.php\?screen=info_ally&amp;id=[\d]*">' \
+                                        r'(?:' + '|'.join(self.ally_tribes_list) + ')' \
+                                                                                   r'</a>\s*' \
+                                                                                   r'</td>\s*' \
+                                                                                   r'<td class="lit-item">([0-9., [a-z]*)</td>'
+
+            nickname_pattern_by_nick = r'<td class="lit-item">(\d{1,3})</td>\s*' \
+                                       r'<td class="lit-item nowrap">\s*' \
+                                       r'<a class="" href="/guest.php\?screen=info_player&amp;id=(\d{1,15})">\s*' \
+                                       r'<img src="https://dspl.innogamescdn.com/asset/\w{1,15}/graphic/.{10,30}" alt="" class="userimage-tiny" />\s*' \
+                                       r'((?:' + '|'.join(self.extra_players_list) + r'))' \
+                                                                                     r'\s*</a>\s*' \
+                                                                                     r'</td>\s*' \
+                                                                                     r'<td class="lit-item nowrap">\s*' \
+                                                                                     r'<img src="https://dspl.innogamescdn.com/asset/\w{1,15}/graphic/.{10,30}" alt="" class="userimage-tiny" />\s*' \
+                                                                                     r'<a href="/guest.php\?screen=info_ally&amp;id=[\d]*">' \
+                                                                                     r'.*' \
+                                                                                     r'</a>\s*' \
+                                                                                     r'</td>\s*' \
+                                                                                     r'<td class="lit-item">([0-9., [a-z]*)</td>'
 
             found_by_tribe = re.findall(pattern=nickname_pattern_by_tribe, string=ranking_content)
             found_by_nick = re.findall(pattern=nickname_pattern_by_nick, string=ranking_content)
@@ -221,28 +251,16 @@ class Ranking:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Enter arguments (prefix char is '):", prefix_chars="'")
-    parser.add_argument("'s", default="145", metavar='server_number', type=str,
-                        help="Type the servers number, e.g. 145.")
-    parser.add_argument("'n", default=10, metavar="number_of_players", type=int,
-                        help="Number of the best players included in the ranking., at least 3!")
-    parser.add_argument("'a", nargs='+', metavar="ally_tribes_list", type=str,
-                        help="A list of allied tribes whose best players will be included.")
-    parser.add_argument("'p", nargs='+', metavar="extra_players_list", type=str,
-                        help="A list of extra players, that will be included.")
-
-    args = parser.parse_args()
-    server = getattr(args, 's')
-    how_many = getattr(args, 'n')
-    ally_tribes_list = getattr(args, 'a')
-    extra_players_list = getattr(args, 'p')
+    server = 192
+    how_many = 5
+    ally_tribes_list = ['NnŻ 4']
+    extra_players_list = ['lunesco']
 
     if how_many < 3:
         raise Exception("Number of players must be at least 3!")
 
     player_times = get_player_times(server=server)
-    extra_players_list = ["ZCB Burzą Błogosławiony", "ZCB Burzą Błogosławiony"]
-
-    ranking = Ranking(server=server, player_times=player_times, how_many=how_many, ally_tribes_list=ally_tribes_list,
+    ranking = Ranking(server=server, player_times=player_times,
+                      how_many=how_many, ally_tribes_list=ally_tribes_list,
                       extra_players_list=extra_players_list)
     ranking.get_all_info_in_one_place()
