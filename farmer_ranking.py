@@ -64,17 +64,19 @@ if __name__ == '__main__':
     plunderer_ranking_list = PlundererRankingSpider.ranking_list
     plunderer_score_dict = {element['name']: element['score'] for element in plunderer_ranking_list}
 
-    bb_text = """[table]
+    bb_text = """[spoiler=][table]
     [**]Ranking plemienny[||]Ranking ogólny[||]Nazwa[||]Plemię[||]Wynik[||]Liczba splądrowanych wiosek[/**]
     """
     bb_text += generate_bb_text(farmers_list, {0: 17, 1: 15, 2: 13, 3: 11, 4: 11}, 9, plunderer_score_dict)
-    bb_text += """[/table]"""
+    bb_text += """[/table][/spoiler]"""
 
     print(f'{bb_text}')
 
     pyperclip.copy(f'{bb_text}')
 
 # TODO:
-#  1. Aktualnie wywolywanie z farmer_ranking modulu plunderer_ranking powoduje, ze jest generopwana lista z dlugoscia ustalona w plunderer_ranking
+#  1. Aktualnie wywolywanie z farmer_ranking modulu plunderer_ranking powoduje, ze jest generopwana
+#      lista z dlugoscia ustalona w plunderer_ranking
 #  2. Redundancja
-#  3.
+#  3. Moze jakos lepiej rozwiazac problem z utils.generate_bb_text (if else co do kolumny)
+#  4.

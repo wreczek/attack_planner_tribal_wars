@@ -56,11 +56,11 @@ if __name__ == '__main__':
 
     whole_dict = AggressorRankingSpider.ranking_list
 
-    bb_text = """[table]
+    bb_text = """[spoiler=][table]
     [**]Ranking plemienny[||]Ranking ogólny[||]Nazwa[||]Plemię[||]Wynik[/**]
     """
     bb_text += generate_bb_text(whole_dict, {0: 17, 1: 15, 2: 13, 3: 11, 4: 11}, 9)
-    bb_text += """[/table]"""
+    bb_text += """[/table][/spoiler]"""
 
     print(f'{bb_text}')
 

@@ -16,9 +16,9 @@ class RankingItem(Item):
 
 class AggressorRankingSpider(scrapy.Spider):
     name = 'aggressor_ranking'
-    start_urls = ['https://pl192.plemiona.pl/guest.php?screen=ranking&mode=kill_player&offset=0&type=def']
+    start_urls = ['https://pl192.plemiona.pl/guest.php?screen=ranking&mode=kill_player&offset=0&type=support']
     offset = 0
-    base_url = 'https://pl192.plemiona.pl/guest.php?screen=ranking&mode=kill_player&offset={}&type=def'
+    base_url = 'https://pl192.plemiona.pl/guest.php?screen=ranking&mode=kill_player&offset={}&type=support'
     ranking_list = []
 
     def parse(self, response):
