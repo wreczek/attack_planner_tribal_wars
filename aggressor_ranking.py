@@ -24,7 +24,7 @@ class AggressorRankingSpider(scrapy.Spider):
     def parse(self, response):
         ally_tribes = ['OM', 'OM.']
         players_list = []
-        players_num = 10
+        players_num = 5
 
         for row in response.xpath('//table[@class="vis"]/tr[position() > 1]'):
             item = RankingItem()
@@ -54,12 +54,12 @@ if __name__ == '__main__':
     process.crawl(AggressorRankingSpider)
     process.start()
 
-    whole_dict = AggressorRankingSpider.ranking_list
+    aggressor_ranking_list = AggressorRankingSpider.ranking_list
 
-    bb_text = """[spoiler=][table]
+    bb_text = """[spoiler=Ranking agresorów][table]
     [**]Ranking plemienny[||]Ranking ogólny[||]Nazwa[||]Plemię[||]Wynik[/**]
     """
-    bb_text += generate_bb_text(whole_dict, {0: 17, 1: 15, 2: 13, 3: 11, 4: 11}, 9)
+    bb_text += generate_bb_text(aggressor_ranking_list, {0: 17, 1: 15, 2: 13, 3: 11, 4: 11}, 9)
     bb_text += """[/table][/spoiler]"""
 
     print(f'{bb_text}')

@@ -14,7 +14,7 @@ class RankingItem(Item):
     score = Field()
 
 
-class AggressorRankingSpider(scrapy.Spider):
+class DefenderRankingSpider(scrapy.Spider):
     name = 'aggressor_ranking'
     start_urls = ['https://pl192.plemiona.pl/guest.php?screen=ranking&mode=kill_player&offset=0&type=def']
     offset = 0
@@ -51,15 +51,15 @@ class AggressorRankingSpider(scrapy.Spider):
 
 if __name__ == '__main__':
     process = CrawlerProcess(get_project_settings())
-    process.crawl(AggressorRankingSpider)
+    process.crawl(DefenderRankingSpider)
     process.start()
 
-    whole_dict = AggressorRankingSpider.ranking_list
+    defender_ranking_list = DefenderRankingSpider.ranking_list
 
-    bb_text = """[spoiler=][table]
+    bb_text = """[spoiler=Ranking obrońców][table]
     [**]Ranking plemienny[||]Ranking ogólny[||]Nazwa[||]Plemię[||]Wynik[/**]
     """
-    bb_text += generate_bb_text(whole_dict, {0: 17, 1: 15, 2: 13, 3: 11, 4: 11}, 9)
+    bb_text += generate_bb_text(defender_ranking_list, {0: 17, 1: 15, 2: 13, 3: 11, 4: 11}, 9)
     bb_text += """[/table][/spoiler]"""
 
     print(f'{bb_text}')
